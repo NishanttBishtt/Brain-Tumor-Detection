@@ -172,7 +172,7 @@ Brain-Tumor-MRI-Classification/
 ### Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Brain-Tumor-Detection.git
+git clone https://github.com/NishanttBishtt/Brain-Tumor-Detection.git
 
 cd Brain-Tumor-Detection
 ```
