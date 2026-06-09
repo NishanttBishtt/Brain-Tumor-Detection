@@ -4,7 +4,7 @@ An AI-powered Brain Tumor Classification System that analyzes MRI scans and clas
 
 ---
 
-## 📌 Overview
+##  Overview
 
 Brain tumors are among the most critical neurological disorders requiring early diagnosis and treatment. Manual MRI analysis can be time-consuming and requires expert radiologists. This project aims to assist diagnosis by automatically classifying MRI scans using Deep Learning techniques.
 
@@ -17,7 +17,7 @@ The system provides:
 
 ---
 
-## ✨ Features
+##  Features
 
 * ✅ Brain Tumor Classification using Deep Learning
 * ✅ Four-Class Classification
@@ -36,7 +36,7 @@ The system provides:
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```text
 MRI Image
@@ -64,7 +64,7 @@ Streamlit Frontend
 
 ---
 
-## 🧠 Model Details
+##  Model Details
 
 ### Base Model
 
@@ -89,7 +89,7 @@ This approach improved generalization while reducing training time.
 
 ---
 
-## 📊 Classes
+##  Classes
 
 | Class      | Description                            |
 | ---------- | -------------------------------------- |
@@ -115,7 +115,7 @@ Benefits:
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Machine Learning
 
@@ -140,7 +140,7 @@ Benefits:
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 Brain-Tumor-MRI-Classification/
@@ -167,12 +167,12 @@ Brain-Tumor-MRI-Classification/
 
 ---
 
-## 🚀 Installation
+##  Installation
 
 ### Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Brain-Tumor-Detection.git
+git clone https://github.com/NishanttBishtt/Brain-Tumor-Detection.git
 
 cd Brain-Tumor-Detection
 ```
@@ -205,7 +205,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ Run Backend
+##  Run Backend
 
 ```bash
 cd backend
@@ -221,7 +221,7 @@ http://127.0.0.1:8000
 
 ---
 
-## ▶️ Run Frontend
+##  Run Frontend
 
 Open a new terminal:
 
@@ -239,7 +239,7 @@ http://localhost:8501
 
 ---
 
-## 📈 Sample Output
+##  Sample Output
 
 ### Prediction Result
 
@@ -267,35 +267,8 @@ The application displays:
 
 ---
 
-## 📷 Screenshots
 
-### Home Page
-
-Add screenshot here:
-
-```text
-screenshots/homepage.png
-```
-
-### Prediction Result
-
-Add screenshot here:
-
-```text
-screenshots/prediction.png
-```
-
-### Grad-CAM Visualization
-
-Add screenshot here:
-
-```text
-screenshots/gradcam.png
-```
-
----
-
-## 🎯 Future Improvements
+##  Future Improvements
 
 * Docker Containerization
 * Cloud Deployment
@@ -306,17 +279,13 @@ screenshots/gradcam.png
 
 ---
 
-## 👨‍💻 Authors
+##  Authors
 
-**Nishant Bisht**
-
-B.Tech Student
-
-Machine Learning • Deep Learning • Generative AI
+**Nishant Singh Bisht**
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This project is developed for educational and research purposes only.
 
