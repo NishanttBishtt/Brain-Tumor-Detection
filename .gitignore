@@ -1,0 +1,16 @@
+# Virtual Environment
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary files
+.DS_Store
+
+# Generated outputs
+backend/uploads/
+backend/gradcam_outputs/
