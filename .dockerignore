@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+.ipynb_checkpoints/
+
+backend/uploads/
+backend/gradcam_outputs/
+
+.git
+.gitignore
+
+screenshots/
+
+*.pyc
+*.pyo
+*.pyd
+
+.DS_Store
