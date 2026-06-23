@@ -124,11 +124,6 @@ async def predict(
     request: Request,
     file: UploadFile = File(...)
 ):
-    base_url = str(request.base_url)
-
-    gradcam_url = (
-        f"{base_url}gradcam/{output_filename}"
-    )
 
     try:
 
@@ -205,6 +200,11 @@ async def predict(
         output_path = os.path.join(
             "gradcam_outputs",
             output_filename
+        )
+        base_url = str(request.base_url)
+
+        gradcam_url = (
+            f"{base_url}gradcam/{output_filename}"
         )
 
         save_gradcam(
