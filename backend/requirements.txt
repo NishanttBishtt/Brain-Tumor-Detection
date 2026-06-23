@@ -1,0 +1,15 @@
+# Core
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+
+# ML
+tensorflow==2.16.2
+keras==3.12.2
+
+# Image processing
+opencv-python==4.9.0.80
+Pillow==10.3.0
+scikit-image==0.22.0
+numpy==1.23.5
+imutils==0.5.4
