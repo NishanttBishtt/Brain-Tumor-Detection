@@ -8,8 +8,8 @@ tensorflow==2.16.2
 keras==3.12.2
 
 # Image processing
-opencv-python==4.9.0.80
+opencv-python-headless==4.9.0.80
 Pillow==10.3.0
 scikit-image==0.22.0
-numpy==1.23.5
+numpy==1.26.4
 imutils==0.5.4

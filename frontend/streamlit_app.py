@@ -520,6 +520,9 @@ footer {
 let currentFile = null;
 let currentBlob = null;
 
+const API_URL =
+    "https://your-render-backend.onrender.com";
+
 function handleFile(file) {
   if (!file) return;
   if (!['image/jpeg','image/jpg','image/png'].includes(file.type)) {
@@ -592,7 +595,13 @@ async function runPrediction() {
   const formData = new FormData();
   formData.append('file', currentFile, currentFile.name);
   try {
-    const res = await fetch('http://127.0.0.1:8000/predict', { method:'POST', body:formData });
+    const res = await fetch(
+        `${API_URL}/predict`,
+        {
+            method:'POST',
+            body:formData
+        }
+    );
     if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + res.statusText);
     const data = await res.json();
     if (data.error) throw new Error(data.error);

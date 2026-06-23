@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -121,8 +121,14 @@ def crop_image(image):
 
 @app.post("/predict")
 async def predict(
+    request: Request,
     file: UploadFile = File(...)
 ):
+    base_url = str(request.base_url)
+
+    gradcam_url = (
+        f"{base_url}gradcam/{output_filename}"
+    )
 
     try:
 
@@ -221,16 +227,15 @@ async def predict(
             "probabilities":
                 probabilities,
 
-            "gradcam_url":
-                f"http://127.0.0.1:8000/gradcam/{output_filename}"
+            "gradcam_url": gradcam_url
 
         })
 
     except Exception as e:
 
-        return JSONResponse({
-
-            "error":
-                str(e)
-
-        })
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(e)
+            }
+        )
