@@ -37,7 +37,7 @@ app.mount(
 )
 
 model = tf.keras.models.load_model(
-    "brain_tumor_model (1).keras"
+    "brain_tumor_model.keras"
 )
 
 class_names = [
