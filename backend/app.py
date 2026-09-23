@@ -48,6 +48,19 @@ class_names = [
 ]
 # preprocessing
 
+# NLM DENOISING
+def apply_nlm(image):
+    denoised = cv2.fastNlMeansDenoisingColored(
+        image,
+        None,
+        h=10,
+        hColor=10,
+        templateWindowSize =7,
+        searchWindowSize=21
+    )
+    return denoised
+
+#cropping
 def crop_image(image):
 
     img_gray = cv2.cvtColor(
@@ -143,7 +156,8 @@ async def predict(
 
         image = np.array(image)
 
-
+        image = apply_nlm(image)
+        
         image = crop_image(image)
 
         image = cv2.resize(
