@@ -521,7 +521,7 @@ let currentFile = null;
 let currentBlob = null;
 
 const API_URL =
-    "https://your-render-backend.onrender.com";
+    "http://127.0.0.1:8000";
 
 function handleFile(file) {
   if (!file) return;
