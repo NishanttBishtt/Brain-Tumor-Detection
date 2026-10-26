@@ -28,6 +28,7 @@ app.add_middleware(
 # Create folders if they don't exist
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("gradcam_outputs", exist_ok=True)
+os.makedirs("segmentation_outputs", exist_ok=True)
 
 # Serve Grad-CAM images
 app.mount(
@@ -35,9 +36,18 @@ app.mount(
     StaticFiles(directory="gradcam_outputs"),
     name="gradcam"
 )
+app.mount(
+    "/segmentation",
+    StaticFiles(directory="segmentation_outputs"),
+    name="segmentation"
+)
 
 model = tf.keras.models.load_model(
     "brain_tumor_model.keras"
+)
+segmentation_model = tf.keras.models.load_model(
+    "tumor_segmentation.keras",
+    compile=False
 )
 
 class_names = [
@@ -131,6 +141,72 @@ def crop_image(image):
 
     return new_img
 
+def generate_segmentation(image, base_url):
+    # image is the original RGB image as a NumPy array
+    original_height, original_width = image.shape[:2]
+
+    # Match U-Net training preprocessing
+    seg_image = cv2.resize(
+        image,
+        (256, 256),
+        interpolation=cv2.INTER_LINEAR
+    )
+
+    seg_image = seg_image.astype(np.float32) / 255.0
+    seg_image = np.expand_dims(seg_image, axis=0)
+
+    # Predict mask
+    prediction = segmentation_model.predict(
+        seg_image,
+        verbose=0
+    )[0, :, :, 0]
+
+    # Convert probabilities into a binary mask
+    mask = (prediction >= 0.5).astype(np.uint8) * 255
+
+    # Resize mask back to original image dimensions
+    mask = cv2.resize(
+        mask,
+        (original_width, original_height),
+        interpolation=cv2.INTER_NEAREST
+    )
+
+    # Create a red overlay on the original MRI
+    overlay = image.copy()
+    tumor_pixels = mask > 127
+
+    red = np.zeros_like(image)
+    red[:, :, 0] = 255
+
+    overlay[tumor_pixels] = (
+        0.5 * image[tumor_pixels]
+        + 0.5 * red[tumor_pixels]
+    ).astype(np.uint8)
+
+    # Save unique filenames
+    mask_filename = f"{uuid.uuid4().hex}_mask.png"
+    overlay_filename = f"{uuid.uuid4().hex}_overlay.jpg"
+
+    mask_path = os.path.join(
+        "segmentation_outputs",
+        mask_filename
+    )
+    overlay_path = os.path.join(
+        "segmentation_outputs",
+        overlay_filename
+    )
+
+    Image.fromarray(mask).save(mask_path)
+    Image.fromarray(overlay).save(overlay_path)
+
+    return {
+        "segmentation_mask_url": (
+            f"{base_url}segmentation/{mask_filename}"
+        ),
+        "segmentation_overlay_url": (
+            f"{base_url}segmentation/{overlay_filename}"
+        )
+    }
 
 @app.post("/predict")
 async def predict(
@@ -154,9 +230,18 @@ async def predict(
             io.BytesIO(contents)
         ).convert("RGB")
 
-        image = np.array(image)
+        original_image = np.array(image)
 
-        image = apply_nlm(image)
+        # Generate segmentation using the original image
+        base_url = str(request.base_url)
+
+        segmentation_results = generate_segmentation(
+            original_image,
+            base_url
+        )
+
+        # Continue the existing classification preprocessing
+        image = apply_nlm(original_image.copy())
         
         image = crop_image(image)
 
@@ -241,7 +326,8 @@ async def predict(
             "probabilities":
                 probabilities,
 
-            "gradcam_url": gradcam_url
+            "gradcam_url": gradcam_url,
+            **segmentation_results
 
         })
 

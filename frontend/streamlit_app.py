@@ -363,6 +363,7 @@ footer {
       <span class="badge">TensorFlow</span>
       <span class="badge">FastAPI</span>
       <span class="badge">Grad-CAM</span>
+      <span class="badge">Segmentation</span>
       <span class="badge">v1.0</span>
     </div>
   </nav>
@@ -498,6 +499,54 @@ footer {
       </div>
     </div>
 
+    <!-- FULL WIDTH: Tumor Segmentation -->
+    <div class="card full-width" id="segmentationSection"
+     style="display:none; width:100%; box-sizing:border-box;">
+        <div class="card-header">
+            <div class="card-header-icon">🎯</div>
+            <div class="card-header-title">
+                Tumor Segmentation — U-Net
+            </div>
+        </div>
+
+        <div class="card-body">
+            <p style="font-size:.78rem;color:var(--text-2);
+                      margin-bottom:1rem;line-height:1.6;">
+                The model predicts a tumor region mask and overlays
+                the predicted region on the original MRI.
+            </p>
+
+            <div class="img-compare">
+                <div class="img-panel">
+                    <img id="maskImg" src="" alt="Predicted tumor mask"/>
+                    <div class="img-panel-label">
+                        <span class="img-panel-dot"
+                              style="background:var(--cyan)"></span>
+                        Predicted Tumor Mask
+                    </div>
+                </div>
+
+                <div class="img-panel">
+                    <img id="segOverlayImg" src=""
+                        alt="Tumor segmentation overlay"/>
+                    <div class="img-panel-label">
+                        <span class="img-panel-dot"
+                              style="background:var(--red)"></span>
+                        MRI Segmentation Overlay
+                    </div>
+                </div>
+            </div>
+
+            <p style="font-size:.7rem;color:var(--text-3);
+                      margin-top:1rem;line-height:1.6;">
+                Research use only. The predicted region is not a
+                clinically validated tumor boundary.
+            </p>
+        </div>
+    </div>
+
+    
+
     <!-- Disclaimer -->
     <div class="disclaimer">
       <span>&#x26A0;</span>
@@ -629,68 +678,163 @@ const CLASS_META = {
   notumor:    { desc: 'No tumour detected in the scan.' },
 };
 
+
 function renderResults(data) {
-  const prediction = data.prediction  || 'Unknown';
+  const prediction = data.prediction || 'Unknown';
   const confidence = parseFloat(data.confidence || 0);
-  const probs      = data.probabilities || {};
-  const gradcamUrl = data.gradcam_url  || '';
+  const probs = data.probabilities || {};
+  const gradcamUrl = data.gradcam_url || '';
+  const maskUrl = data.segmentation_mask_url || '';
+  const segmentationOverlayUrl =
+    data.segmentation_overlay_url || '';
 
+  // Normalize prediction name
+  const predKey = prediction.toLowerCase().replace(/[\s_-]/g, '');
+  const isNoTumor = predKey === 'notumor';
+
+  // ----------------------------------
+  // Classification result
+  // ----------------------------------
   document.getElementById('diagName').textContent = prediction;
-  const meta = CLASS_META[prediction.toLowerCase()] || {};
-  document.getElementById('diagSub').textContent  = meta.desc || '';
 
+  const meta = CLASS_META[predKey] || {};
+  document.getElementById('diagSub').textContent = meta.desc || '';
+
+  // ----------------------------------
+  // Confidence pill
+  // ----------------------------------
   const pill = document.getElementById('confPill');
   const pillText = document.getElementById('confPillText');
-  pill.className = 'conf-pill';
-  if (confidence >= 80)      { pill.classList.add('high'); pillText.textContent = 'High confidence \u2014 ' + confidence.toFixed(1) + '%'; }
-  else if (confidence >= 50) { pill.classList.add('mid');  pillText.textContent = 'Moderate confidence \u2014 ' + confidence.toFixed(1) + '%'; }
-  else                        { pill.classList.add('low');  pillText.textContent = 'Low confidence \u2014 ' + confidence.toFixed(1) + '%'; }
 
+  pill.className = 'conf-pill';
+
+  if (confidence >= 80) {
+    pill.classList.add('high');
+    pillText.textContent =
+      'High confidence — ' + confidence.toFixed(1) + '%';
+  } else if (confidence >= 50) {
+    pill.classList.add('mid');
+    pillText.textContent =
+      'Moderate confidence — ' + confidence.toFixed(1) + '%';
+  } else {
+    pill.classList.add('low');
+    pillText.textContent =
+      'Low confidence — ' + confidence.toFixed(1) + '%';
+  }
+
+  // ----------------------------------
+  // Confidence gauge
+  // ----------------------------------
   const TOTAL_ARC = 126;
   const offset = TOTAL_ARC * (1 - confidence / 100);
   const fill = document.getElementById('gaugeFill');
-  const num  = document.getElementById('gaugeNum');
-  const colour = confidence >= 80 ? '#00e5a0' : confidence >= 50 ? '#ffb547' : '#ff5e7a';
+  const num = document.getElementById('gaugeNum');
+
+  const colour = confidence >= 80
+    ? '#00e5a0'
+    : confidence >= 50
+      ? '#ffb547'
+      : '#ff5e7a';
+
   fill.style.stroke = colour;
+
   requestAnimationFrame(() => {
     fill.style.strokeDashoffset = offset;
+
     let startTime = null;
     const end = confidence;
+
     function step(ts) {
       if (!startTime) startTime = ts;
+
       const p = Math.min((ts - startTime) / 900, 1);
       num.textContent = Math.round(end * easeOut(p)) + '%';
+
       if (p < 1) requestAnimationFrame(step);
     }
+
     requestAnimationFrame(step);
   });
 
+  // ----------------------------------
+  // Class probability bars
+  // ----------------------------------
   const container = document.getElementById('probSection');
-  const labelMap = { glioma:'Glioma', meningioma:'Meningioma', notumor:'No Tumor', pituitary:'Pituitary' };
-  const sorted = Object.entries(probs).sort((a,b) => b[1]-a[1]);
-  const predKey = prediction.toLowerCase().replace(' ','');
-  container.innerHTML = sorted.map(([cls,prob]) => {
-    const pct   = (prob * 100).toFixed(1);
-    const isAct = cls.toLowerCase() === predKey;
+
+  const labelMap = {
+    glioma: 'Glioma',
+    meningioma: 'Meningioma',
+    notumor: 'No Tumor',
+    pituitary: 'Pituitary'
+  };
+
+  const sorted = Object.entries(probs)
+    .sort((a, b) => b[1] - a[1]);
+
+  container.innerHTML = sorted.map(([cls, prob]) => {
+    const pct = (prob * 100).toFixed(1);
+    const isActive = cls.toLowerCase().replace(/[\s_-]/g, '') === predKey;
+
     return '<div class="prob-row">' +
-      '<div class="prob-cls'+(isAct?' active':'')+'">'+( labelMap[cls]||cls)+'</div>' +
-      '<div class="prob-track"><div class="prob-fill'+(isAct?' active':'')+'" style="width:0%" data-width="'+pct+'"></div></div>' +
-      '<div class="prob-pct'+(isAct?' active':'')+'">'+pct+'%</div>' +
-      '</div>';
+      '<div class="prob-cls' + (isActive ? ' active' : '') + '">' +
+        (labelMap[cls.toLowerCase()] || cls) +
+      '</div>' +
+      '<div class="prob-track">' +
+        '<div class="prob-fill' + (isActive ? ' active' : '') +
+          '" style="width:0%" data-width="' + pct + '"></div>' +
+      '</div>' +
+      '<div class="prob-pct' + (isActive ? ' active' : '') + '">' +
+        pct + '%' +
+      '</div>' +
+    '</div>';
   }).join('');
+
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      container.querySelectorAll('.prob-fill').forEach(el => { el.style.width = el.dataset.width + '%'; });
+      container.querySelectorAll('.prob-fill').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+      });
     });
   });
 
-  document.getElementById('emptyCard').style.display   = 'none';
+  // ----------------------------------
+  // Show classification results
+  // ----------------------------------
+  document.getElementById('emptyCard').style.display = 'none';
   document.getElementById('resultPanel').style.display = 'block';
 
-  if (gradcamUrl) {
+  // ----------------------------------
+  // Grad-CAM visibility
+  // ----------------------------------
+  const explanationSection =
+    document.getElementById('explanationSection');
+
+  if (!isNoTumor && gradcamUrl) {
     document.getElementById('origImg').src = currentBlob;
-    document.getElementById('camImg').src  = gradcamUrl;
-    document.getElementById('explanationSection').style.display = 'block';
+    document.getElementById('camImg').src = gradcamUrl;
+    explanationSection.style.display = 'block';
+  } else {
+    explanationSection.style.display = 'none';
+  }
+
+  // ----------------------------------
+  // Tumor segmentation visibility
+  // ----------------------------------
+  const segmentationSection =
+    document.getElementById('segmentationSection');
+
+  if (
+    !isNoTumor &&
+    maskUrl &&
+    segmentationOverlayUrl
+  ) {
+    document.getElementById('maskImg').src = maskUrl;
+    document.getElementById('segOverlayImg').src =
+      segmentationOverlayUrl;
+
+    segmentationSection.style.display = 'block';
+  } else {
+    segmentationSection.style.display = 'none';
   }
 }
 
@@ -698,6 +842,7 @@ function hideResults() {
   document.getElementById('emptyCard').style.display          = 'block';
   document.getElementById('resultPanel').style.display        = 'none';
   document.getElementById('explanationSection').style.display = 'none';
+  document.getElementById('segmentationSection').style.display = 'none';
 }
 
 let toastTimer;
@@ -717,4 +862,4 @@ function easeOut(t) { return 1 - Math.pow(1-t, 3); }
 </html>
 """
 
-components.html(HTML, height=1100, scrolling=True)
+components.html(HTML, height=1600, scrolling=True)
